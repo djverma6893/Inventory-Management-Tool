@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QAction
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QIcon
 from database_mongodb import DatabaseManager
 # from database_manager import DatabaseManager
 
@@ -65,6 +65,12 @@ class LoginPage(QWidget):
         self.password_input.setEchoMode(QLineEdit.Password)
         self.password_input.setText('admin123')  # Pre-filled for demo
         self.password_input.returnPressed.connect(self.handle_login)
+        
+        # Add show/hide password action
+        self.show_password_action = QAction(self)
+        self.show_password_action.setIcon(QIcon("visible.png"))
+        self.show_password_action.triggered.connect(self.toggle_password_visibility)
+        self.password_input.addAction(self.show_password_action, QLineEdit.TrailingPosition)
         password_layout.addWidget(password_label)
         password_layout.addWidget(self.password_input)
         container_layout.addLayout(password_layout)
@@ -121,4 +127,13 @@ class LoginPage(QWidget):
 
     def show_error(self, message):
         self.error_label.setText(f'❌ {message}')
+
+    def toggle_password_visibility(self):
+        """Toggle password visibility in password input"""
+        if self.password_input.echoMode() == QLineEdit.Password:
+            self.password_input.setEchoMode(QLineEdit.Normal)
+            self.show_password_action.setIcon(QIcon("hide.png"))
+        else:
+            self.password_input.setEchoMode(QLineEdit.Password)
+            self.show_password_action.setIcon(QIcon("visible.png"))
 
