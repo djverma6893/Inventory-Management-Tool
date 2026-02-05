@@ -1,10 +1,11 @@
 import sys
+
+from PyQt5.QtGui import QPalette, QColor
 from PyQt5.QtWidgets import QApplication, QMainWindow, QStackedWidget
 from login_page import LoginPage
 from inventory_page import InventoryPage
 from Inventory_page_user import InventoryPageUser
 # from menubar import MenuBarManager
-
 
 class InventoryManagementTool(QMainWindow):
     def __init__(self):
@@ -30,7 +31,9 @@ class InventoryManagementTool(QMainWindow):
 
         # Status bar
         self.statusBar().setStyleSheet("background-color: #2c3e50; color: white; font-weight: bold;")
-        self.statusBar().showMessage('Please login to continue')
+        mes="Please login to continue"
+        self.status_bar(mes)
+        # self.statusBar().showMessage('Please login to continue')
 
     def on_login_success(self, user_info):
         """Called when user successfully logs in"""
@@ -43,7 +46,7 @@ class InventoryManagementTool(QMainWindow):
 
             # Switch to inventory page
             self.stacked_widget.setCurrentWidget(self.inventory_page)
-            self.statusBar().showMessage(f'Welcome, {user_info.get("full_name", "User")}!')
+            # self.statusBar().showMessage(f'Welcome, {user_info.get("full_name", "User")}!')
         else:
             print("moye moye")
             self.inventory_page = InventoryPageUser(self, user_info)
@@ -51,7 +54,7 @@ class InventoryManagementTool(QMainWindow):
 
             # Switch to inventory page
             self.stacked_widget.setCurrentWidget(self.inventory_page)
-            self.statusBar().showMessage(f'Welcome, {user_info.get("full_name", "User")}!')
+            # self.statusBar().showMessage(f'Welcome, {user_info.get("full_name", "User")}!')
 
 
     def on_logout(self):
@@ -70,7 +73,12 @@ class InventoryManagementTool(QMainWindow):
         # Switch back to login page
         self.stacked_widget.setCurrentWidget(self.login_page)
         self.current_user = None
-        self.statusBar().showMessage('Logged out successfully')
+        mes="Logger out Successfully"
+        self.status_bar(mes)
+        # self.statusBar().showMessage('Logged out successfully')
+
+    def status_bar(self, message):
+        self.statusBar().showMessage(message)
 
     def get_main_style(self):
         return """
@@ -108,6 +116,7 @@ class InventoryManagementTool(QMainWindow):
                 border: 2px solid #ddd;
                 border-radius: 8px;
                 font-size: 14px;
+                color: #202020;
                 background-color: #f8f9fa;
             }
 
@@ -186,6 +195,7 @@ class InventoryManagementTool(QMainWindow):
                 border: 2px solid #3498db;
                 border-radius: 5px;
                 font-size: 14px;
+                color: #202020;
                 background-color: white;
             }
 
@@ -193,6 +203,7 @@ class InventoryManagementTool(QMainWindow):
                 background-color: white;
                 border: 2px solid #bdc3c7;
                 border-radius: 8px;
+                color: #202020;
                 gridline-color: #ecf0f1;
                 font-size: 13px;
             }
@@ -223,7 +234,7 @@ class InventoryManagementTool(QMainWindow):
                 background-color: #27ae60;
                 color: white;
             }
-            #del_col_btn, #add_col_btn{
+            #logs_btn, #del_col_btn, #add_col_btn{
                 padding: 12px 12px;
                 font-size: 14px;
                 font-weight: bold;
@@ -231,9 +242,9 @@ class InventoryManagementTool(QMainWindow):
                 border-radius: 8px;
                 min-width: 20px;
                 background-color: #F2F4F8;
-                color: white;
+                color: Black;
             }
-            #del_col_btn:hover , #add_col_btn:hover {
+            #logs_btn:hover, #del_col_btn:hover , #add_col_btn:hover {
                 background-color: #E4E7EC;
                 }
             #addButton:hover {

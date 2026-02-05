@@ -21,9 +21,12 @@ class ColumnInputDialog(QDialog):
         layout.setContentsMargins(20, 20, 20, 20)
 
         label = QLabel("Enter column name:")
+        label.setStyleSheet("color: #202020;")
         self.line_edit = QLineEdit()
-        self.line_edit.setPlaceholderText("e.g. employee_id")
+        self.line_edit.setPlaceholderText("e.g. Employee")
+
         label2=QLabel("Column id:")
+        label2.setStyleSheet("color: #202020;")
         self.column_id = QLineEdit()
         self.column_id.setPlaceholderText("e.g. employee_id")
 

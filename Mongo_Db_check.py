@@ -1,19 +1,8 @@
 from pymongo import MongoClient
 import certifi
 
-# MongoDB connection URI with SSL relaxed settings
-try:
-    client = MongoClient(
-        'mongodb+srv://IMT_Equipment_DB:Imt_Mongodb%40123@equipmentinventory.kwniez6.mongodb.net/?appName=EquipmentInventory',
-        tls=True,
-        tlsCAFile=certifi.where()
-    )
-    # Test connection
-    client.admin.command('ping')
-    print("✓ MongoDB connection successful!")
-except Exception as e:
-    print(f"✗ MongoDB connection failed: {e}")
-    exit()
+# MongoDB connection URI (URL-ENCODED password)
+client = MongoClient('mongodb+srv://IMT_Equipment_DB:Imt_Mongodb%40123@equipmentinventory.kwniez6.mongodb.net/?appName=EquipmentInventory',tls=True, tlsCAFile=certifi.where())
 
 # Connect to MongoDB
 # client = MongoClient(
@@ -37,7 +26,7 @@ document = {
         'hcl_laptop': "HCL Laptop",
         'serial_no': "Serial No",
     }
-column_name = "charger_idfff"
+column_name = "charger_itt"
 # collection2.insert_one(document)
 # Remove the field from all documents
 
@@ -49,13 +38,9 @@ rresult = collection2.update_many(
     {column_name: {"$exists": True}},  # Only if field exists
     {"$unset": {column_name: ""}}
 )
-doc = collection2.find_one({"team_member":"Team Member"})
-if doc:
-    sk = list(doc.values())
-    sk.pop(0)
-    print(sk)
-else:
-    print("Warning: No document found with team_member='Team Member'")
+sk=list(collection2.find_one({"team_member":"Team Member"}).values())
+sk.pop(0)
+print(sk)
 data=collection.find()
 data2= collection2.find()
 print("Databases in MongoDB:")

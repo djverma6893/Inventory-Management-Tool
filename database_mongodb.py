@@ -4,23 +4,15 @@ from pymongo.errors import DuplicateKeyError, PyMongoError
 import hashlib
 from bson.objectid import ObjectId
 
-
 class DatabaseManager:
-    def __init__(self, connection_string="mongodb+srv://IMT_Equipment_DB:Imt_Mongodb%40123@equipmentinventory.kwniez6.mongodb.net/?appName=EquipmentInventory", db_name='team_equipment'):
+    def __init__(self, connection_string="mongodb+srv://IMT_Equipment_DB:Imt_Mongodb%40123@equipmentinventory.kwniez6.mongodb.net/?appName=EquipmentInventory"
+, db_name='team_equipment'):
         """
         Initialize MongoDB connection
         :param connection_string: MongoDB connection URI
         :param db_name: Database name
         """
-        self.client = MongoClient(
-            connection_string,
-            tls=True,
-            tlsCAFile=certifi.where(),
-            tlsAllowInvalidCertificates=True,
-            tlsAllowInvalidHostnames=True,
-            serverSelectionTimeoutMS=30000,
-            socketTimeoutMS=30000
-        )
+        self.client = MongoClient(connection_string,tls=True, tlsCAFile=certifi.where())
         self.db = self.client[db_name]
         self.users_collection = self.db['users']
         self.equipment_collection = self.db['equipment']
@@ -81,7 +73,7 @@ class DatabaseManager:
         """Fetch all equipment records"""
         try:
             records = list(self.equipment_collection.find())
-            print(records)
+            print("equipment_collection all data",records)
 
             # Convert ObjectId to string for compatibility
             for record in records:
@@ -126,16 +118,21 @@ class DatabaseManager:
     def add_record(self, data):
         """Add a new equipment record"""
         try:
-            result = self.equipment_collection.insert_one({
-                'team_member': data['team_member'],
-                'laptop1_sn': data['laptop1_sn'],
-                'laptop2_sn': data['laptop2_sn'],
-                'intern_phone': data['intern_phone'],
-                'test_phone1': data['test_phone1'],
-                'test_phone2': data['test_phone2'],
-                'hcl_laptop': data['hcl_laptop'],
-                'serial_no': data['serial_no']
-            })
+            hnm=self.get_header_id()
+            ins_val={}
+            for id, value in zip(hnm, data):
+                ins_val[id]=value
+            self.equipment_collection.insert_one(ins_val)
+            # result = self.equipment_collection.insert_one({
+            #     'team_member': data['team_member'],
+            #     'laptop1_sn': data['laptop1_sn'],
+            #     'laptop2_sn': data['laptop2_sn'],
+            #     'intern_phone': data['intern_phone'],
+            #     'test_phone1': data['test_phone1'],
+            #     'test_phone2': data['test_phone2'],
+            #     'hcl_laptop': data['hcl_laptop'],
+            #     'serial_no': data['serial_no']
+            # })
             return True
         except Exception as e:
             print(f"Error adding record: {e}")
@@ -144,19 +141,26 @@ class DatabaseManager:
     def update_record(self, record_id, data):
         """Update an existing equipment record"""
         try:
-            result = self.equipment_collection.update_one(
-                {'_id': ObjectId(record_id)},
-                {'$set': {
-                    'team_member': data['team_member'],
-                    'laptop1_sn': data['laptop1_sn'],
-                    'laptop2_sn': data['laptop2_sn'],
-                    'intern_phone': data['intern_phone'],
-                    'test_phone1': data['test_phone1'],
-                    'test_phone2': data['test_phone2'],
-                    'hcl_laptop': data['hcl_laptop'],
-                    'serial_no': data['serial_no']
-                }}
-            )
+            print(record_id, "record id in mongodb file need to be updated")
+            hnm = self.get_header_id()
+            ins_val = {}
+            for id, value in zip(hnm, data):
+                ins_val[id] = value
+            print(ins_val, "values need to be updated")
+            result=self.equipment_collection.update_one({'_id': ObjectId(record_id)}, {'$set': ins_val})
+            # result = self.equipment_collection.update_one(
+            #     {'_id': ObjectId(record_id)},
+            #     {'$set': {
+            #         'team_member': data['team_member'],
+            #         'laptop1_sn': data['laptop1_sn'],
+            #         'laptop2_sn': data['laptop2_sn'],
+            #         'intern_phone': data['intern_phone'],
+            #         'test_phone1': data['test_phone1'],
+            #         'test_phone2': data['test_phone2'],
+            #         'hcl_laptop': data['hcl_laptop'],
+            #         'serial_no': data['serial_no']
+            #     }}
+            # )
             return result.modified_count > 0 or result.matched_count > 0
         except Exception as e:
             print(f"Error updating record: {e}")
@@ -191,11 +195,20 @@ class DatabaseManager:
             print(f"Error fetching record: {e}")
             return None
     #get header ID name of main table
-    def get_header_id(self):
-        doc=self.equipment_collection.find_one()
-        header_name = list(doc.keys())
-        header_name.remove('_id')
-        return header_name
+    def get_header_id(self, header_name=None):
+        if header_name:
+            doc= self.users_collection.find_one({"team_member":"Team Member"})
+
+            keys = [k for k, v in doc.items() if v in header_name]
+            print(keys, "keys for deletion of table column")
+
+            return keys
+
+        else:
+            doc=self.equipment_collection.find_one()
+            header_name = list(doc.keys())
+            header_name.remove('_id')
+            return header_name
     #get header name of main table
     def get_header_name(self):
         stu= list(self.users_collection.find_one({"team_member":"Team Member"}).values())
@@ -213,8 +226,16 @@ class DatabaseManager:
     {"$set": {self.header_id: ""}})
         self.users_collection.update_one({"team_member":"Team Member"}, {"$set": {self.header_id: self.header_name}})
 
-        print(self.get_header_name())
-        print(self.get_header_id())
+        print(self.get_header_name(), "header name in db")
+        print(self.get_header_id(), "header id in db")
+
+    #delete selected column to main the main table
+    def del_sel_column(self,  header_name=None):
+        del_col=self.get_header_id(header_name)
+        for col in del_col:
+            self.equipment_collection.update_many({col:{"$exists":True}},{"$unset":{col:""}})
+            self.users_collection.update_many({col:{"$exists":True}},{"$unset":{col:""}})
+
 
 
     def close_connection(self):

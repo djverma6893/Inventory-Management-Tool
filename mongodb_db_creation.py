@@ -3,15 +3,7 @@ from pymongo import MongoClient
 import random
 
 # Connect to MongoDB (creates database if doesn't exist)
-client = MongoClient(
-    'mongodb+srv://IMT_Equipment_DB:Imt_Mongodb%40123@equipmentinventory.kwniez6.mongodb.net/?appName=EquipmentInventory',
-    tls=True,
-    tlsCAFile=certifi.where(),
-    tlsAllowInvalidCertificates=True,
-    tlsAllowInvalidHostnames=True,
-    serverSelectionTimeoutMS=30000,
-    socketTimeoutMS=30000
-)
+client = MongoClient('mongodb+srv://IMT_Equipment_DB:Imt_Mongodb%40123@equipmentinventory.kwniez6.mongodb.net/?appName=EquipmentInventory',tls=True, tlsCAFile=certifi.where())
 db = client['team_equipment']
 collection = db['equipment']
 

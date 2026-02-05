@@ -46,12 +46,12 @@ class ToolbarMenuManager:
         file_btn.setObjectName('toolbarButton')
         file_menu = QMenu(file_btn)
         file_menu.setStyleSheet(self._get_menu_style())
-
-        # Add File menu actions
-        import_action = QAction('📥 Import from CSV', self.parent)
-        import_action.setShortcut('Ctrl+I')
-        import_action.triggered.connect(self.import_data)
-        file_menu.addAction(import_action)
+        if self.user_info["role"]=="admin":
+            # Add File menu actions
+            import_action = QAction('📥 Import from CSV', self.parent)
+            import_action.setShortcut('Ctrl+I')
+            import_action.triggered.connect(self.import_data)
+            file_menu.addAction(import_action)
 
         export_action = QAction('📤 Export to CSV', self.parent)
         export_action.setShortcut('Ctrl+E')
@@ -60,9 +60,9 @@ class ToolbarMenuManager:
 
         file_menu.addSeparator()
 
-        exit_action = QAction('🚪 Exit', self.parent)
+        exit_action = QAction("📥 Import Tamplate", self.parent)
         exit_action.setShortcut('Ctrl+Q')
-        exit_action.triggered.connect(self.exit_application)
+        exit_action.triggered.connect(self.import_tamp)
         file_menu.addAction(exit_action)
 
         file_btn.setMenu(file_menu)
@@ -82,7 +82,7 @@ class ToolbarMenuManager:
 
         help_menu.addSeparator()
 
-        about_action = QAction('ℹ️ About', self.parent)
+        about_action = QAction('About', self.parent)
         about_action.triggered.connect(self.show_about)
         help_menu.addAction(about_action)
 
@@ -107,38 +107,24 @@ class ToolbarMenuManager:
             error_details = []
 
             with open(file_path, 'r', encoding='utf-8') as file:
-                csv_reader = csv.DictReader(file)
-
-                # Check if required columns exist
-                required_columns = ['team_member']
-                if not all(col in csv_reader.fieldnames for col in required_columns):
-                    QMessageBox.warning(
-                        self.parent,
-                        'Invalid CSV Format',
-                        'CSV file must contain at least the "team_member" column.'
-                    )
+                csv_reader = list(csv.reader(file))
+                header = self.parent.header_name()
+                header.pop(0)
+                print(header[0])
+                if csv_reader[0]!=header:
+                    QMessageBox.warning(self.parent, 'Invalid CSV Format','CSV file must be in valid format. \n To know the actual format of CSV Download Template form  the File Menu.')
                     return
 
-                for row_num, row in enumerate(csv_reader, start=2):
+                for row_num, row in enumerate(csv_reader):
                     try:
-                        data = {
-                            'team_member': row.get('team_member', '').strip(),
-                            'laptop1_sn': row.get('laptop1_sn', '').strip(),
-                            'laptop2_sn': row.get('laptop2_sn', '').strip(),
-                            'intern_phone': row.get('intern_phone', '').strip(),
-                            'test_phone1': row.get('test_phone1', '').strip(),
-                            'test_phone2': row.get('test_phone2', '').strip(),
-                            'hcl_laptop': row.get('hcl_laptop', 'NO').strip().upper(),
-                            'serial_no': row.get('serial_no', '').strip()
-                        }
-
-                        if not data['team_member']:
-                            error_details.append(f"Row {row_num}: team_member is required")
-                            skipped_count += 1
+                        if row_num == 0:
                             continue
+                        data=[]
+                        for i in range(len(header)):
+                            data.append(row[i].strip())
 
-                        if data['hcl_laptop'] not in ['YES', 'NO']:
-                            data['hcl_laptop'] = 'NO'
+                        if data[6] not in ['YES', 'NO']:
+                            data[6] = 'NO'
 
                         if self.db_manager.add_record(data):
                             imported_count += 1
@@ -179,7 +165,7 @@ class ToolbarMenuManager:
             'CSV Files (*.csv);;All Files (*)'
         )
         TD= self.parent.table_data()
-        print(TD)
+        print("table_data",TD)
         if not file_path:
             return
 
@@ -193,6 +179,8 @@ class ToolbarMenuManager:
             headers = ['team_member', 'laptop1_sn', 'laptop2_sn',
                        'intern_phone', 'test_phone1', 'test_phone2',
                        'hcl_laptop', 'serial_no']
+            headers= self.parent.header_name()
+            headers.pop(0)
 
             with open(file_path, 'w', newline='', encoding='utf-8') as file:
                 csv_writer = csv.DictWriter(file, fieldnames=headers)
@@ -203,7 +191,7 @@ class ToolbarMenuManager:
                     if i==0:
                         continue
                     for j, header in enumerate(headers):
-                        export_row[header] = row[j+1]
+                        export_row[header] = row[j]
                     csv_writer.writerow(export_row)
 
             QMessageBox.information(
@@ -286,9 +274,11 @@ class ToolbarMenuManager:
         """Show about dialog with application information"""
         about_text = """
         <h2>🏢 Equipment Inventory Management System</h2>
+        <!--
         <p><b>Version:</b> 1.0.0</p>
         <p><b>Release Date:</b> January 2026</p>
         <p><b>Database:</b> MongoDB</p>
+        -->
 
         <hr>
 
@@ -300,14 +290,10 @@ class ToolbarMenuManager:
 
         <h3>✨ Key Features:</h3>
         <ul>
-            <li>✅ User authentication with role-based access control</li>
             <li>✅ Create, read, update, and delete equipment records</li>
             <li>✅ Advanced search and filter functionality</li>
             <li>✅ Import/Export data via CSV format</li>
-            <li>✅ Secure password hashing (SHA-256)</li>
-            <li>✅ Real-time data synchronization with MongoDB</li>
             <li>✅ User-friendly graphical interface</li>
-            <li>✅ Keyboard shortcuts for productivity</li>
         </ul>
 
         <h3>🛠️ Technology Stack:</h3>
@@ -315,22 +301,18 @@ class ToolbarMenuManager:
             <li><b>Programming Language:</b> Python 3.x</li>
             <li><b>GUI Framework:</b> PyQt5</li>
             <li><b>Database:</b> MongoDB</li>
-            <li><b>Security:</b> SHA-256 Password Hashing</li>
         </ul>
 
         <hr>
 
         <h3>👤 Current Session:</h3>
         <p><b>User:</b> {}</p>
-        <p><b>Role:</b> {}</p>
-        <p><b>Full Name:</b> {}</p>
-
         <hr>
-
         <p style='margin-top: 20px; text-align: center; color: #7f8c8d;'>
         <i>© 2026 Equipment Inventory Management System<br>
         All rights reserved.<br><br>
-        Developed with ❤️ using Python and PyQt5</i>
+        Developed with ❤️ using Python and PyQt5<br>
+        Created BY:<b>Aman Verma (52201924)</b></i>
         </p>
         """.format(
             self.user_info.get('username', 'Unknown'),
@@ -340,27 +322,43 @@ class ToolbarMenuManager:
 
         msg = QMessageBox(self.parent)
         msg.setWindowTitle('About - Equipment Inventory')
-        msg.setTextFormat(Qt.RichText)
+        # msg.setTextFormat(Qt.RichText)
         msg.setText(about_text)
         msg.setIcon(QMessageBox.Information)
         msg.setStandardButtons(QMessageBox.Ok)
         msg.exec_()
 
-    def exit_application(self):
+    def import_tamp(self):
         """Exit the application with confirmation"""
-        reply = QMessageBox.question(
+        file_path, _ = QFileDialog.getSaveFileName(
             self.parent,
-            'Exit Application',
-            'Are you sure you want to exit the application?\n\nAny unsaved changes will be lost.',
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
+            'Export CSV File',
+            'Tamplate.csv',
+            'CSV Files (*.csv);;All Files (*)'
         )
+        Tp_nm= self.parent.header_name()
+        print(Tp_nm)
+        Tp_nm.pop(0)
+        if not file_path:
+            return
 
-        if reply == QMessageBox.Yes:
-            if self.parent.parent_window:
-                self.parent.parent_window.close()
-            else:
-                self.parent.close()
+        try:
+            with open(file_path, 'w', newline='', encoding='utf-8') as file:
+                csv_writer = csv.DictWriter(file, fieldnames=Tp_nm)
+                csv_writer.writeheader()
+
+
+            QMessageBox.information(
+                self.parent,
+                'Tamplate Successful',
+                f'✅ Successfully downloaded Tamplate csv file'
+            )
+        except Exception as e:
+            QMessageBox.critical(
+                self.parent,
+                'Export Error',
+                f'Failed to export data:\n{str(e)}'
+            )
 
     def _get_toolbar_style(self):
         """Return the stylesheet for the toolbar"""

@@ -6,7 +6,9 @@ from PyQt5.QtGui import QFont
 from database_mongodb import DatabaseManager
 from dialogs import AddEditDialog
 from Column_dialogs import ColumnInputDialog
+from del_col_dialog import DeleteColumnDialog
 from toolbar import ToolbarMenuManager  # Import custom toolbar instead of menubar
+from logs import LogsWindow
 
 
 
@@ -85,12 +87,18 @@ class InventoryPage(QWidget):
         self.del_col_btn.setToolTip('Click here to delete column')
         self.del_col_btn.setMaximumWidth(30)
         self.del_col_btn.clicked.connect(self.delete_column)
+        # to open logs pages
+        self.logs_btn=QPushButton("Logs")
+        self.logs_btn.setObjectName('logs_btn')
+        self.logs_btn.setToolTip('Click here to show logs')
+        self.logs_btn.clicked.connect(self.show_logs)
 
 
 
         search_layout.addWidget(search_label)
         search_layout.addWidget(self.search_box)
         search_layout.addStretch()
+        search_layout.addWidget(self.logs_btn)
         search_layout.addWidget(self.add_col_btn)
         search_layout.addWidget(self.del_col_btn)
         content_layout.addLayout(search_layout)
@@ -221,6 +229,9 @@ class InventoryPage(QWidget):
             # Adjust column widths
             self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
             self.table.setColumnWidth(0, 70)
+            mes=f"{self.table.rowCount()-1} records loaded"
+            self.parent_window.status_bar(mes)
+            # self.statusBar().showMessage(f"{self.user_info} , {self.table.rowCount()} records loaded")
 
         except Exception as e:
             QMessageBox.critical(self, 'Error', f'Failed to load data: {str(e)}')
@@ -245,10 +256,11 @@ class InventoryPage(QWidget):
         if checkbox_widget:
             checkbox = checkbox_widget.findChild(QCheckBox)
             record_id = checkbox.property('record_id')
-            print(record_id)
+            print(record_id, "252, inventory_page")
 
             # Fetch record data
             record_data = self.db_manager.get_record_by_id(record_id)
+            print(record_data, "data entered in dialog box of adding data")
             if record_data:
                 self.open_edit_dialog(record_data)
 
@@ -257,6 +269,7 @@ class InventoryPage(QWidget):
         dialog = AddEditDialog(self, mode='add')
         if dialog.exec_() == QDialog.Accepted:
             data = dialog.get_data()
+            print(data, "data entered in dialog box of adding data")
 
             if self.db_manager.add_record(data):
                 self.load_data()
@@ -266,12 +279,10 @@ class InventoryPage(QWidget):
 
     def open_edit_dialog(self, record_data):
         """Open dialog to edit an existing record"""
+        record_id = record_data.get('id')
         dialog = AddEditDialog(self, mode='edit', data=record_data)
         if dialog.exec_() == QDialog.Accepted:
             data = dialog.get_data()
-
-            # MongoDB returns dict, so get 'id' from dict
-            record_id = record_data.get('id') if isinstance(record_data, dict) else record_data[0]
 
             if self.db_manager.update_record(record_id, data):
                 self.load_data()
@@ -331,19 +342,26 @@ class InventoryPage(QWidget):
         return [
             [
                 self.table.item(r, c).text() if self.table.item(r, c) else ""
-                for c in range(self.table.columnCount())
+                for c in range(1,self.table.columnCount())
             ]
             for r in range(self.table.rowCount())
         ]
 
     def add_column(self):
-        print("hm jinda hai")
         dialog=ColumnInputDialog(self)
         if dialog.exec_():
             col_name = dialog.get_column_name()
             if col_name:
-                print(col_name)
+                QMessageBox.information(
+                    self,
+                    "Added new column",
+                    f"Selected columns {col_name} added successfully!"
+                )
+                print(col_name, "in inventory page fun-name: add_column()")
                 # self.add_column(col_name)
+        self.search_box.clear()
+        self.load_data()
+
         # print(dialog.get_column_name())
 
         """Add columns to table"""
@@ -361,12 +379,44 @@ class InventoryPage(QWidget):
 
             # row.a
 
-        print(row)
+        print(row, "in inventory page fun-name: header_name()")
         return row
 
     #del column
     def delete_column(self):
-        pass
+        headers = self.db_manager.get_header_name()
+
+        dialog = DeleteColumnDialog(headers, self)
+
+        if dialog.exec_() == QDialog.Accepted:
+            columns_to_delete = dialog.get_selected_columns()
+            print(columns_to_delete, "in inventory page fun-name: delete_column()")
+            self.db_manager.del_sel_column(columns_to_delete)
+
+            # Remove columns safely (right → left)
+            for col_name in columns_to_delete:
+                index = headers.index(col_name)
+                self.table.removeColumn(index)
+                headers.pop(index)
+
+            QMessageBox.information(
+                self,
+                "Deleted",
+                "Selected columns were deleted successfully."
+            )
+            self.search_box.clear()
+            self.load_data()
+
+
+    #to Show logs page
+    def show_logs(self):
+        log= LogsWindow()
+        if log.exec_():
+            print("hogya kand")
+        else:
+            print("data khtm khel khtm")
+
+
 
 
 

@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QAction
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont, QIcon
+from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 from database_mongodb import DatabaseManager
 # from database_manager import DatabaseManager
 
@@ -50,7 +50,7 @@ class LoginPage(QWidget):
         self.username_input = QLineEdit()
         self.username_input.setObjectName('loginInput')
         self.username_input.setPlaceholderText('Enter your username')
-        self.username_input.setText('admin')  # Pre-filled for demo
+        self.username_input.setText('user')  # Pre-filled for demo
         username_layout.addWidget(username_label)
         username_layout.addWidget(self.username_input)
         container_layout.addLayout(username_layout)
@@ -63,14 +63,20 @@ class LoginPage(QWidget):
         self.password_input.setObjectName('loginInput')
         self.password_input.setPlaceholderText('Enter your password')
         self.password_input.setEchoMode(QLineEdit.Password)
-        self.password_input.setText('admin123')  # Pre-filled for demo
+        self.password_input.setText('user123')  # Pre-filled for demo
+        #show/hide password icon
+        self.show_action = QAction(QIcon("hide.png"), "", self)
+        self.show_action.setCheckable(True)
+        self.show_action.toggled.connect(self.toggle_password)
+        self.password_input.addAction(self.show_action, QLineEdit.TrailingPosition)
+
+        # #Dard mode handle
+        # palette = self.password_input.palette()
+        # palette.setColor(QPalette.Text, QColor("grey"))  # text color
+        # palette.setColor(QPalette.Base, QColor("#2b2b2b"))  # background color
+        # self.password_input.setPalette(palette)
+
         self.password_input.returnPressed.connect(self.handle_login)
-        
-        # Add show/hide password action
-        self.show_password_action = QAction(self)
-        self.show_password_action.setIcon(QIcon("visible.png"))
-        self.show_password_action.triggered.connect(self.toggle_password_visibility)
-        self.password_input.addAction(self.show_password_action, QLineEdit.TrailingPosition)
         password_layout.addWidget(password_label)
         password_layout.addWidget(self.password_input)
         container_layout.addLayout(password_layout)
@@ -92,7 +98,7 @@ class LoginPage(QWidget):
         container_layout.addWidget(self.error_label)
 
         # Info text
-        info_label = QLabel('Default credentials:\nUsername: admin\nPassword: admin123')
+        info_label = QLabel('Member credentials:\nUsername: user\nPassword: user123')
         info_label.setObjectName('infoLabel')
         info_label.setAlignment(Qt.AlignCenter)
         container_layout.addWidget(info_label)
@@ -103,7 +109,15 @@ class LoginPage(QWidget):
         main_layout.addWidget(login_container)
 
         self.setLayout(main_layout)
-
+    #Show/Hide function for password inpute
+    def toggle_password(self,checked):
+        if checked:
+            self.password_input.setEchoMode(QLineEdit.Normal)  # Show password
+            self.show_action.setIcon(QIcon("hide.png"))  # Optional: change icon
+        else:
+            self.password_input.setEchoMode(QLineEdit.Password)  # Hide password
+            self.show_action.setIcon(QIcon("show.png"))
+    #login Handle
     def handle_login(self):
         username = self.username_input.text().strip()
         password = self.password_input.text().strip()
@@ -127,13 +141,4 @@ class LoginPage(QWidget):
 
     def show_error(self, message):
         self.error_label.setText(f'❌ {message}')
-
-    def toggle_password_visibility(self):
-        """Toggle password visibility in password input"""
-        if self.password_input.echoMode() == QLineEdit.Password:
-            self.password_input.setEchoMode(QLineEdit.Normal)
-            self.show_password_action.setIcon(QIcon("hide.png"))
-        else:
-            self.password_input.setEchoMode(QLineEdit.Password)
-            self.show_password_action.setIcon(QIcon("visible.png"))
 

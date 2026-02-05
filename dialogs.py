@@ -7,7 +7,8 @@ class AddEditDialog(QDialog):
         super().__init__(parent)
         self.mode = mode
         self.data = data
-        print(self.data)
+        self.parent_window = parent
+        print(self.data, "data to add in dialog box to update data")
         self.setWindowTitle('Add New Record' if mode == 'add' else 'Edit Record')
         self.setMinimumWidth(450)
         self.setStyleSheet(self.get_dialog_style())
@@ -17,14 +18,17 @@ class AddEditDialog(QDialog):
         layout = QFormLayout()
         layout.setSpacing(15)
         layout.setContentsMargins(20, 20, 20, 20)
-
         # Create input fields
         # col_name=self.parent().header_name()
-        self.col_nm= DatabaseManager().get_header_id()
-        print(self.col_nm)
-        self.col_name=[f+'_input' for f in self.col_nm]
+        print(self.parent_window.header_name(),"printing header name thourgh table head")
+        # self.col_nm= DatabaseManager().get_header_id()
+        self.col_nm=self.parent_window.header_name()
+        self.col_nm.pop(0)
+        std=["".join(col.split()) for col in self.col_nm]
+        print(self.col_nm, "header id")
+        self.col_name=[f+'_input' for f in std]
 
-        print(self.col_name,"hanji")
+        print(self.col_name,"dialog Qlinedit id name")
         # Style inputs
         input_style = """
                     QLineEdit, QComboBox {
@@ -38,7 +42,7 @@ class AddEditDialog(QDialog):
                     }
                 """
         for i, input in enumerate(self.col_name):
-            if(input=="hcl_laptop_input"):
+            if(input=="HCLLaptop_input"):
                 col=QComboBox()
                 col.addItems(['YES', 'NO'])
                 col.setStyleSheet(input_style)
@@ -96,7 +100,10 @@ class AddEditDialog(QDialog):
 
         # labels = ['Team Member:', 'Laptop1 SN:', 'Laptop2 SN:', 'Intern Phone:',
         #           'Test Phone1:', 'Test Phone2:', 'HCL Laptop:', 'Serial NO:']
-        labels = DatabaseManager().get_header_name()
+        # labels = DatabaseManager().get_header_name()
+        labels =self.parent_window.header_name()
+        labels.pop(0)
+        # labels=["".join(col.split()) for col in labels]
 
         # inputs = [self.team_member_input, self.laptop1_sn_input, self.laptop2_sn_input,
         #           self.intern_phone_input, self.test_phone1_input, self.test_phone2_input,
@@ -127,10 +134,15 @@ class AddEditDialog(QDialog):
         self.setLayout(layout)
 
     def get_data(self):
-        input_data={}
-        for i,name,dd in enumerate(zip(self.col_nm,self.col_name)):
-            input_data.append(name,self.col_name[i].text())
-        print(input_data)
+        input_data=[]
+        for i,(name,dd) in enumerate(zip(self.col_nm,self.col_name)):
+            if(name=="HCL Laptop"):
+                input_data.append(dd.currentText())
+            else:
+                input_data.append(dd.text() or None)
+        # input_data = {name: dd.text() for name, dd in zip(self.col_nm, self.col_name)}
+
+        print(input_data, "data entered in dialog box of adding data")
         return input_data
         return {
             'team_member': self.team_member_input.text(),
