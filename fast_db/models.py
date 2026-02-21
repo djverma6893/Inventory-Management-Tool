@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field, model_validator, ValidationError
-from typing import Annotated,Optional
+from pydantic import BaseModel, Field, model_validator, ValidationError, field_validator
+from typing import Annotated, Optional, List
+
 
 class User(BaseModel):
     name: str
@@ -46,3 +47,29 @@ class UserCreate(BaseModel):
         if self.hcl_laptop == "Yes" and not self.serial_no:
             raise ValueError("Please enter your HCL Laptop serial number")
         return self
+
+
+class NewColumn(BaseModel):
+    ColumnName: str = Field(..., min_length=1, max_length=50, description="Enter your column name")
+    ColumnID: str = Field(..., min_length=1, max_length=50, description="Enter your column ID")
+    @field_validator('ColumnID')
+    @classmethod
+    def column_validator(cls,v):
+        if len(v.split()) > 1:
+            raise ValueError("Please enter your column name without space")
+        else:
+            return v
+
+class DelColumn(BaseModel):
+    ColumnName: List[str] = Field(..., min_length=1, max_length=50, description="Enter your column name")
+
+# class Authenticate(BaseModel):
+#     username: str= Field(..., min_length=1, max_length=50, description="Enter your username")
+#     password: str = Field(..., min_length=1, max_length=50, description="Enter your password")
+#     @field_validator("username")
+#     @classmethod
+#     def username_validator(cls,v):
+#         if len(v.split()) > 1:
+#             raise ValueError("Please enter your username without space")
+#         else:
+#             return v

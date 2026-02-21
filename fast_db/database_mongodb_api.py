@@ -56,12 +56,12 @@ class DatabaseManager:
         """Hash password using SHA-256"""
         return hashlib.sha256(password.encode()).hexdigest()
 
-    def authenticate_user(self, username, password):
+    async def authenticate_user(self, username, password):
         """Authenticate user credentials"""
         try:
             hashed_password = self.hash_password(password)
             print("HANGI")
-            user = self.users_collection.find_one({
+            user = await self.users_collection.find_one({
                 'username': username,
                 'password': hashed_password
             })
@@ -169,7 +169,7 @@ class DatabaseManager:
             #     }}
             # )
             print(f"result {result}")
-            return result.modified_count > 0 or result.matched_count > 0
+            return result
         except Exception as e:
             print(f"Error updating record: {e}")
             return False
@@ -184,15 +184,15 @@ class DatabaseManager:
                 '_id': {'$in': object_ids}
             })
             # return result
-            return result.deleted_count > 0
+            return result
         except Exception as e:
             print(f"Error deleting records: {e}")
             return False
 
-    def get_record_by_id(self, record_id):
+    async def get_record_by_id(self, record_id):
         """Get a single equipment record by ID"""
         try:
-            record = self.equipment_collection.find_one({'_id': ObjectId(record_id)})
+            record = await self.equipment_collection.find_one({'_id': ObjectId(record_id)})
 
             if record:
                 record['id'] = str(record['_id'])
@@ -203,23 +203,24 @@ class DatabaseManager:
             print(f"Error fetching record: {e}")
             return None
     #get header ID name of main table
-    def get_header_id(self, header_name=None):
+    async def get_header_id(self, header_name=None):
         if header_name:
-            doc= self.users_collection.find_one({"team_member":"Team Member"})
+            doc= await self.users_collection.find_one({"team_member":"Team Member"})
 
             keys = [k for k, v in doc.items() if v in header_name]
-            print(keys, "keys for deletion of table column")
+            print(keys,header_name, "keys for deletion of table column")
 
             return keys
 
         else:
-            doc=self.equipment_collection.find_one()
+            doc=await self.equipment_collection.find_one()
             header_name = list(doc.keys())
             header_name.remove('_id')
             return header_name
     #get header name of main table
-    def get_header_name(self):
-        stu= list(self.users_collection.find_one({"team_member":"Team Member"}).values())
+    async def get_header_name(self):
+        stu= await self.users_collection.find_one({"team_member":"Team Member"})
+        stu = list(stu.values())
         stu.pop(0)
         # print(stu)
         return stu
@@ -234,15 +235,15 @@ class DatabaseManager:
     {"$set": {self.header_id: ""}})
         self.users_collection.update_one({"team_member":"Team Member"}, {"$set": {self.header_id: self.header_name}})
 
-        print(self.get_header_name(), "header name in db")
-        print(self.get_header_id(), "header id in db")
+        # print(await self.get_header_name(), "header name in db")
+        # print(self.get_header_id(), "header id in db")
 
     #delete selected column to main the main table
-    def del_sel_column(self,  header_name=None):
-        del_col=self.get_header_id(header_name)
+    async def del_sel_column(self,  header_name=None):
+        del_col= await self.get_header_id(header_name)
         for col in del_col:
-            self.equipment_collection.update_many({col:{"$exists":True}},{"$unset":{col:""}})
-            self.users_collection.update_many({col:{"$exists":True}},{"$unset":{col:""}})
+            await self.equipment_collection.update_many({col:{"$exists":True}},{"$unset":{col:""}})
+            await self.users_collection.update_many({col:{"$exists":True}},{"$unset":{col:""}})
 
 
 

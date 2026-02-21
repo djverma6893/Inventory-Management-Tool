@@ -1,5 +1,10 @@
 from database_mongodb_api import DatabaseManager
 
-db = DatabaseManager()
+# db = DatabaseManager()
 
-print(db.fetch_all_records())
+ll= ['dlks','slkdjf', 'sldkjf', 'dklsjf']
+print(len(ll))
+dd=("dstu_sdlkf")
+print(dd.split())
+print(len(dd.split()))
+# print(db.fetch_all_records())

@@ -1,6 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
-from models import User, UserCreate
+from models import User, UserCreate, NewColumn, DelColumn
 from database import collection
 from database_mongodb_api import DatabaseManager
 
@@ -49,9 +49,21 @@ async def get_user(user_id: str):
         search_users.append(user)
     return search_users
 
+@app.post("/NewColumn", status_code=201, responses={404: {"description": "Not found", 201:{"description": "Column has been created"}}})
+async def create_new_column(column: NewColumn):
+    hname=column.ColumnName
+    hId=column.ColumnID
+    db.add_new_column(hname, hId)
 
+@app.delete("/ColDelete/{Col_ID}",status_code=204, responses={404: {"description": "Not found"}})
+async def delete_column(col: DelColumn):
+    await db.del_sel_column(col.ColumnName)
 
-
+@app.get("/Auth" ,status_code=200,responses={404: {"description": "Not found"}})
+async def get_auth(user:str, password:str):
+    user= await db.authenticate_user(user, password)
+    # users.append(user)
+    return user
 
 
 if __name__ == "__main__":
